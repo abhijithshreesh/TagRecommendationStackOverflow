@@ -1,10 +1,13 @@
+"""Author - Abhijith Shreesh"""
 import pandas as pd
 import os
 import xml.etree.ElementTree as ET
 from nltk.corpus import stopwords
-import re
+from re import sub
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
+import re
+from numpy import nan
 
 class XML2DataFrame(object):
 
@@ -45,33 +48,52 @@ class DataCleaner(object):
         self.cache_stop_words = stopwords.words('english')
         self.required_columns = ["AcceptedAnswerId","AnswerCount","Body","CommentCount","CreationDate","FavoriteCount",
                                  "Id","LastActivityDate","LastEditDate","ParentId","PostTypeId","Score","Tags","Title",
-                                 "ViewCount", "no_stop_words"]
+                                 "ViewCount", "body_without_stop_words"]
         self.ps = SnowballStemmer("english")
 
-    def cleanhtml(self, raw_html):
+    def clean_html_tags(self, raw_string):
         cleanr = re.compile('<.*?>')
-        cleantext = re.sub(cleanr, '', raw_html)
+        cleantext = re.sub(cleanr, '', raw_string)
         return cleantext
 
     def remove_stop_words_from_string(self, string):
-        modified_string = ' '.join([word for word in string.lower().split() if word not in self.cache_stop_words])
+        modified_string = sub('[^ a-zA-Z]', ' ', string)
+        modified_string = ' '.join([word for word in modified_string.lower().split(' ') if word not in self.cache_stop_words])
         return modified_string
 
     def stem_data(self, string):
         words = word_tokenize(string)
         stem_list = [self.ps.stem(w) for w in words]
+        if "" in stem_list:
+            stem_list.remove("")
         return stem_list
 
+    def extract_tags(self, tag_string):
+        tag_list =[]
+        if tag_string and tag_string is not nan:
+            tag_string = tag_string.replace("<", "")
+            tag_string = tag_string.replace(">", " ")
+            tag_list = tag_string.split(" ")
+            tag_list = [each.strip(' ') for each in tag_list]
+            tag_list.remove('')
+        return tag_list
+
     def clean_data(self):
-        self.raw_data_df['cleaned_body'] = pd.Series([self.cleanhtml(each) for each in self.raw_data_df.Body], index = self.raw_data_df.index)
-        self.raw_data_df['no_stop_words'] = pd.Series([self.remove_stop_words_from_string(each)
+        self.raw_data_df['cleaned_body'] = pd.Series([self.clean_html_tags(each) for each in self.raw_data_df.Body], index = self.raw_data_df.index)
+        self.raw_data_df['body_without_stop_words'] = pd.Series([self.remove_stop_words_from_string(each)
                                                        for each in self.raw_data_df.cleaned_body],
-                                                      index=self.raw_data_df.index)
+                                                       index=self.raw_data_df.index)
 
         cleaned_df = self.raw_data_df[self.required_columns]
         cleaned_df['stemmed_words'] = pd.Series([self.stem_data(each)
-                                                       for each in self.raw_data_df.no_stop_words],
-                                                      index = self.raw_data_df.index)
+                                                       for each in self.raw_data_df.body_without_stop_words],
+                                                       index = self.raw_data_df.index)
+
+        cleaned_df['stemmed_words'] = pd.Series([self.remove_stop_words_from_string(' '.join(each)).split(' ')
+                                                                 for each in cleaned_df.stemmed_words],
+                                                                 index=cleaned_df.index)
+        cleaned_df['Tags'] = pd.Series([self.extract_tags(tag_string) for tag_string in cleaned_df.Tags], index=cleaned_df.index)
+
         return cleaned_df
 
 def trigger_data_extracttor():
