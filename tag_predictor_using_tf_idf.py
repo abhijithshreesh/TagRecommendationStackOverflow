@@ -2,11 +2,13 @@
 
 import pandas as pd
 import os
-from numpy import nan
+from numpy import nan, array
 import math
 from collections import Counter
-from scipy.spatial.distance import cosine
+#from scipy.spatial.distance import cosine
 import operator
+from scipy.spatial import distance
+
 
 class TagPredictionUsingTFIDF(object):
 
@@ -70,10 +72,15 @@ class TagPredictionUsingTFIDF(object):
 
     def assign_tags(self, tf_idf_test, train_df, k):
         train_df = train_df.reset_index()
-        distace_dict = {index: cosine(tf_idf_test, tf_idf_train) for index, tf_idf_train in
-                        zip(train_df.index, train_df.TF_IDF)}
-        sorted_dict = sorted(distace_dict.items(), key=operator.itemgetter(1), reverse=False)
-        index_list = [each[0] for each in sorted_dict[0:k]]
+        #distace_dict = {index: cosine(tf_idf_test, tf_idf_train) for index, tf_idf_train in
+        #                zip(train_df.index, train_df.TF_IDF)}
+        #sorted_dict = sorted(distace_dict.items(), key=operator.itemgetter(1), reverse=False)
+        test_record = array([tf_idf_test, tf_idf_test])
+        res_dist = distance.cdist(train_df.TF_IDF.tolist(), test_record, metric='cosine')
+        distance_list = [(i, res_dist[i][0]) for i in range(len(res_dist))]
+        distance_list.sort(key=lambda tup: tup[1])
+        index_list = [distance_list[i][0] for i in range(k)]
+        #index_list = [each[0] for each in sorted_dict[0:k]]
         tags = train_df.iloc[index_list, 13].str.cat(sep=',')
         tf_of_tags = self.assign_tf_weight(tags.split(','))
         tags_tuple = sorted(tf_of_tags.items(), key=operator.itemgetter(1), reverse=True)
