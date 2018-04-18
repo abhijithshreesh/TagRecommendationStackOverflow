@@ -5,6 +5,9 @@ import os
 from numpy import nan, array
 import operator
 from sklearn.naive_bayes import GaussianNB
+from skmultilearn.problem_transform import BinaryRelevance
+
+
 
 class MultiLabelClassifier(object):
 
@@ -19,6 +22,7 @@ class MultiLabelClassifier(object):
         self.modified_train_df = pd.DataFrame()
         self.modified_test_df = pd.DataFrame()
         self.classifier = GaussianNB()
+        self.classifier_multilabel = BinaryRelevance(GaussianNB())
 
     def get_tag_list(self):
         tag_set = set()
@@ -52,9 +56,21 @@ class MultiLabelClassifier(object):
                                                                    each,value in zip(self.modified_test_df.predicted_labels,
                                                                     self.modified_test_df.tag)], index=self.modified_test_df.index)
 
+    def multi_label_naive_bayes_classifier_sklearn(self):
+        test_rows = self.modified_test_df.values
+        self.classifier_multilabel.fit(self.modified_train_df[self.total_word_list].values,
+                                       self.modified_train_df[self.total_tag_list])
+        c = self.classifier_multilabel.predict(test_rows)
+        predictions = [self.classifier_multilabel.ensure_multi_label_from_single_class
+                       (self.classifier_multilabel.classifiers[label].
+                           predict(self.classifier_multilabel.ensure_input_format(test_rows)))
+                                    for label in range(len(self.total_tag_list))]
+        b=1
+
 if __name__ == "__main__":
     predictor = MultiLabelClassifier()
     df = predictor.setup_data_frame()
-    predictor.multi_label_naive_bayes_classifier()
+    predictor.multi_label_naive_bayes_classifier_sklearn()
     test_df = predictor.test_df.join(predictor.modified_test_df, how='inner')
+    test_df[[ 'stemmed_words', 'Tags', 'predicted_labels']].to_csv("naivebayes.csv")
     a=1
