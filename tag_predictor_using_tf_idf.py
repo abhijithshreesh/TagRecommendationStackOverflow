@@ -13,7 +13,7 @@ from scipy.spatial import distance
 class TagPredictionUsingTFIDF(object):
 
     def __init__(self):
-        self.total_data_df = pd.read_csv(os.path.join("data", "cleaned_data.csv"))
+        self.total_data_df = pd.read_csv(os.path.join("data", "cleaned_data.csv"), encoding = "ISO-8859-1")
         self.data_df = self.total_data_df[~self.total_data_df.Tags.isnull()]
         #self.total_tag_list = self.get_tag_list()
         self.total_word_list = self.get_word_list()
@@ -59,7 +59,7 @@ class TagPredictionUsingTFIDF(object):
 
     def assign_tf_idf_weight(self, tf_dict, tf_idf):
         for key, value in tf_dict.items():
-            tf_idf[self.word_to_index_dict[key]] = value*math.log(self.idf_dict[key], 10)
+            tf_idf[self.word_to_index_dict[key]] = value*self.idf_dict[key]
         return tf_idf
 
     def compute_tf_idf(self):
