@@ -8,6 +8,7 @@ from sklearn.naive_bayes import BernoulliNB
 from skmultilearn.problem_transform import ClassifierChain
 import scipy.sparse as sps
 from sklearn.metrics import accuracy_score
+from sklearn.tree import DecisionTreeRegressor
 
 
 
@@ -25,6 +26,7 @@ class MultiLabelClassifier(object):
         self.modified_test_df = pd.DataFrame()
         self.classifier = BernoulliNB()
         self.classifier_multilabel = ClassifierChain(BernoulliNB())
+        self.classifier_dt = DecisionTreeRegressor(max_depth=2000)
 
         self.test_tags = pd.DataFrame()
 
@@ -67,16 +69,33 @@ class MultiLabelClassifier(object):
                                        self.modified_train_df[self.total_tag_list])
         c = self.classifier_multilabel.predict(test_rows)
         
-        print c.shape
-        print sps.csc_matrix(self.test_tags.values).shape
-        
-        print accuracy_score(sps.csc_matrix(self.test_tags.values),c)
+        print(c.shape)
+        print(sps.csc_matrix(self.test_tags.values).shape)
+        print(accuracy_score(sps.csc_matrix(self.test_tags.values),c))
+
+    def multi_label_decision_tree_regressor(self):
+        test_rows = self.modified_test_df.values
+        self.classifier_dt.fit(self.modified_train_df[self.total_word_list].values,
+                               self.modified_train_df[self.total_tag_list])
+        predictions = self.classifier_dt.predict(test_rows)
+        temp_df = pd.DataFrame(predictions, columns=self.total_tag_list)
+        self.test_df['predicted_labels'] = pd.Series(['' for each in self.modified_test_df.index],
+                                                     index=self.modified_test_df.index)
+        for tag in self.total_tag_list:
+            self.test_df['predicted_labels'] = pd.Series([each + ',' + tag if value == 1 else each for
+                                                          each, value in zip(self.test_df.predicted_labels,
+                                                                             temp_df[tag])], index=self.test_df.index)
+        self.test_df[['stemmed_words', 'Tags', 'predicted_labels']].to_csv(os.path.join("data", "decision_tree_result.csv"),
+                                                                           index=False)
 
 
 if __name__ == "__main__":
     predictor = MultiLabelClassifier()
     df = predictor.setup_data_frame()
-    predictor.multi_label_naive_bayes_classifier_sklearn()
-    test_df = predictor.test_df.join(predictor.modified_test_df, how='inner')
-    test_df[[ 'stemmed_words', 'Tags', 'predicted_labels']].to_csv("naivebayes.csv")
-    a=1
+    """Jagdeesh commented these 4 below lines"""
+    # predictor.multi_label_naive_bayes_classifier_sklearn()
+    # test_df = predictor.test_df.join(predictor.modified_test_df, how='inner')
+    # test_df[[ 'stemmed_words', 'Tags', 'predicted_labels']].to_csv("naivebayes.csv")
+    # a=1
+    """Jagdeesh commented these 4 above lines"""
+    predictor.multi_label_decision_tree_regressor()
