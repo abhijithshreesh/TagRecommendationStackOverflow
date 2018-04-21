@@ -4,8 +4,10 @@ import pandas as pd
 import os
 from numpy import nan, array
 import operator
-from sklearn.naive_bayes import GaussianNB
-# from skmultilearn.problem_transform import BinaryRelevance
+from sklearn.naive_bayes import BernoulliNB
+from skmultilearn.problem_transform import ClassifierChain
+import scipy.sparse as sps
+from sklearn.metrics import accuracy_score
 
 
 
@@ -21,8 +23,10 @@ class MultiLabelClassifier(object):
         self.total_word_list = self.get_word_list()
         self.modified_train_df = pd.DataFrame()
         self.modified_test_df = pd.DataFrame()
-        self.classifier = GaussianNB()
-        #self.classifier_multilabel = BinaryRelevance(GaussianNB())
+        self.classifier = BernoulliNB()
+        self.classifier_multilabel = ClassifierChain(BernoulliNB())
+
+        self.test_tags = pd.DataFrame()
 
     def get_tag_list(self):
         tag_set = set()
@@ -42,10 +46,9 @@ class MultiLabelClassifier(object):
         for each in self.total_word_list:
             self.modified_train_df[each] = pd.Series([1 if each in words.split(' ') else 0 for words in self.train_df.stemmed_words], index=self.train_df.index)
             self.modified_test_df[each] = pd.Series([1 if each in words.split(' ') else 0 for words in self.test_df.stemmed_words], index=self.test_df.index)
-        print "temp"
         for tag in self.total_tag_list:
             self.modified_train_df[tag] = pd.Series([1 if tag in tags.split(',') else 0 for tags in self.train_df.Tags], index=self.train_df.index)
-        print "temp 1"
+            self.test_tags[tag] = pd.Series([1 if tag in tags.split(',') else 0 for tags in self.test_df.Tags], index=self.test_df.index)
         return self.modified_train_df
 
     def multi_label_naive_bayes_classifier(self):
@@ -65,6 +68,10 @@ class MultiLabelClassifier(object):
         c = self.classifier_multilabel.predict(test_rows)
         
         print c.shape
+        print sps.csc_matrix(self.test_tags.values).shape
+        
+        print accuracy_score(sps.csc_matrix(self.test_tags.values),c)
+
 
 if __name__ == "__main__":
     predictor = MultiLabelClassifier()
