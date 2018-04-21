@@ -89,10 +89,10 @@ class DataCleaner(object):
                                                        for each in self.raw_data_df.body_without_stop_words],
                                                        index = self.raw_data_df.index)
 
-        cleaned_df['stemmed_words'] = pd.Series([self.remove_stop_words_from_string(' '.join(each)).split(' ')
+        cleaned_df['stemmed_words'] = pd.Series([self.remove_stop_words_from_string(' '.join(each))
                                                                  for each in cleaned_df.stemmed_words],
                                                                  index=cleaned_df.index)
-        cleaned_df['Tags'] = pd.Series([self.extract_tags(tag_string) for tag_string in cleaned_df.Tags], index=cleaned_df.index)
+        cleaned_df['Tags'] = pd.Series([','.join(self.extract_tags(tag_string)) for tag_string in cleaned_df.Tags], index=cleaned_df.index)
 
         return cleaned_df
 
