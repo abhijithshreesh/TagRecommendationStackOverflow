@@ -42,8 +42,10 @@ class MultiLabelClassifier(object):
         for each in self.total_word_list:
             self.modified_train_df[each] = pd.Series([1 if each in words.split(' ') else 0 for words in self.train_df.stemmed_words], index=self.train_df.index)
             self.modified_test_df[each] = pd.Series([1 if each in words.split(' ') else 0 for words in self.test_df.stemmed_words], index=self.test_df.index)
+        print "temp"
         for tag in self.total_tag_list:
             self.modified_train_df[tag] = pd.Series([1 if tag in tags.split(',') else 0 for tags in self.train_df.Tags], index=self.train_df.index)
+        print "temp 1"
         return self.modified_train_df
 
     def multi_label_naive_bayes_classifier(self):
@@ -61,11 +63,8 @@ class MultiLabelClassifier(object):
         self.classifier_multilabel.fit(self.modified_train_df[self.total_word_list].values,
                                        self.modified_train_df[self.total_tag_list])
         c = self.classifier_multilabel.predict(test_rows)
-        predictions = [self.classifier_multilabel.ensure_multi_label_from_single_class
-                       (self.classifier_multilabel.classifiers[label].
-                           predict(self.classifier_multilabel.ensure_input_format(test_rows)))
-                                    for label in range(len(self.total_tag_list))]
-        b=1
+        
+        print c.shape
 
 if __name__ == "__main__":
     predictor = MultiLabelClassifier()
