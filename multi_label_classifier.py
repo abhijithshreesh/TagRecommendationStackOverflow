@@ -5,14 +5,14 @@ import os
 from numpy import nan, array
 import operator
 from sklearn.naive_bayes import GaussianNB
-from skmultilearn.problem_transform import BinaryRelevance
+# from skmultilearn.problem_transform import BinaryRelevance
 
 
 
 class MultiLabelClassifier(object):
 
     def __init__(self):
-        self.total_data_df = pd.read_csv(os.path.join("data", "cleaned_data.csv"))
+        self.total_data_df = pd.read_csv(os.path.join("data", "cleaned_data.csv"), encoding = "ISO-8859-1")
         self.data_df = self.total_data_df[~self.total_data_df.Tags.isnull()]
         self.total_records = len(self.data_df.index)
         self.train_df = self.data_df.tail(int(self.total_records * .67))
@@ -22,7 +22,7 @@ class MultiLabelClassifier(object):
         self.modified_train_df = pd.DataFrame()
         self.modified_test_df = pd.DataFrame()
         self.classifier = GaussianNB()
-        self.classifier_multilabel = BinaryRelevance(GaussianNB())
+        #self.classifier_multilabel = BinaryRelevance(GaussianNB())
 
     def get_tag_list(self):
         tag_set = set()
