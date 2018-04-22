@@ -9,6 +9,7 @@ from skmultilearn.problem_transform import ClassifierChain
 import scipy.sparse as sps
 from sklearn.metrics import accuracy_score
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
 
 
 
@@ -27,6 +28,7 @@ class MultiLabelClassifier(object):
         self.classifier = BernoulliNB()
         self.classifier_multilabel = ClassifierChain(BernoulliNB())
         self.classifier_dt = DecisionTreeRegressor(max_depth=2000)
+        self.classifier_random_forest = RandomForestRegressor(max_depth=100)
 
         self.test_tags = pd.DataFrame()
 
@@ -88,6 +90,20 @@ class MultiLabelClassifier(object):
         self.test_df[['stemmed_words', 'Tags', 'predicted_labels']].to_csv(os.path.join("data", "decision_tree_result.csv"),
                                                                            index=False)
 
+    def multi_label_random_forest(self):
+        test_rows = self.modified_test_df.values
+        self.classifier_random_forest.fit(self.modified_train_df[self.total_word_list].values,
+                               self.modified_train_df[self.total_tag_list])
+        predictions = self.classifier_random_forest.predict(test_rows)
+        temp_df = pd.DataFrame(predictions, columns=self.total_tag_list)
+        self.test_df['predicted_labels'] = pd.Series(['' for each in self.modified_test_df.index],
+                                                     index=self.modified_test_df.index)
+        for tag in self.total_tag_list:
+            self.test_df['predicted_labels'] = pd.Series([each + ',' + tag if value == 1 else each for
+                                                          each, value in zip(self.test_df.predicted_labels,
+                                                                             temp_df[tag])], index=self.test_df.index)
+        self.test_df[['stemmed_words', 'Tags', 'predicted_labels']].to_csv(os.path.join("data", "random_forest_result.csv"),
+                                                                           index=False)
 
 if __name__ == "__main__":
     predictor = MultiLabelClassifier()
@@ -99,3 +115,4 @@ if __name__ == "__main__":
     # a=1
     """Jagdeesh commented these 4 above lines"""
     predictor.multi_label_decision_tree_regressor()
+    predictor.multi_label_random_forest()
