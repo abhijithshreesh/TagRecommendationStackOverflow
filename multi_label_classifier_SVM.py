@@ -12,6 +12,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn import svm
+from sklearn.decomposition import PCA
 
 
 
@@ -56,6 +57,9 @@ class MultiLabelClassifier(object):
         for tag in self.total_tag_list:
             self.modified_train_df[tag] = pd.Series([1 if tag in tags.split(',') else 0 for tags in self.train_df.Tags], index=self.train_df.index)
             self.test_tags[tag] = pd.Series([1 if tag in tags.split(',') else 0 for tags in self.test_df.Tags], index=self.test_df.index)
+        pca = PCA(n_components=966)
+        principal = pca.fit(self.modified_train_df)
+        # self.modified_train_df = principal
         return self.modified_train_df
 
     def multi_label_naive_bayes_classifier(self):
@@ -111,7 +115,6 @@ class MultiLabelClassifier(object):
     def multi_label_svm(self):
         test_rows = self.modified_test_df.values
         tags = array(self.modified_train_df[self.total_tag_list])
-        tag_t = tags.transpose()
         temp_df = pd.DataFrame()
         for col in range(tags.shape[1]):
             self.classifier_svm.fit(self.modified_train_df[self.total_word_list].values,
