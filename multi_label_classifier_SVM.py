@@ -31,7 +31,7 @@ class MultiLabelClassifier(object):
         self.classifier_multilabel = ClassifierChain(BernoulliNB())
         self.classifier_dt = DecisionTreeRegressor(max_depth=2000)
         self.classifier_random_forest = RandomForestRegressor(max_depth=100)
-        self.classifier_svm = svm.SVC(kernel='polynomial')
+        self.classifier_svm = svm.SVC(kernel='linear')
 
         self.test_tags = pd.DataFrame()
 
@@ -126,7 +126,7 @@ class MultiLabelClassifier(object):
                                                           each, value in zip(self.test_df.predicted_labels,
                                                                              temp_df[tag])], index=self.test_df.index)
         self.test_df[['stemmed_words', 'Tags', 'predicted_labels']].to_csv(
-            os.path.join("data", "polynomial_svm.csv"),
+            os.path.join("data", "linear_svm.csv"),
             index=False)
 
 if __name__ == "__main__":
