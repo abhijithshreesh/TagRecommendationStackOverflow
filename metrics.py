@@ -14,31 +14,35 @@
 
 import pandas as pd
 
+class Metrics(object):
 
-def accuracyFunc(row):
-    return 1 if any(i in row['New_Tags'].split(',') for i in row['Tags'].split(',')) else 0
-
-
-def recallFunc(row):
-    actualTags = row.Tags.split(",")
-    predictedTags = row.New_Tags.split(",")
-    
-    # Tags predicted that are correct.
-    recalledTags = set(actualTags).intersection(predictedTags)
-    # Number of correctly predicted Tags
-    numberOfRecalledTags = len(recalledTags)
-    
-    return numberOfRecalledTags/len(actualTags) if numberOfRecalledTags else 0
+    def accuracyFunc(self, tags, new_tags):
+        return 1 if any(i in tags.split(',') for i in new_tags.split(',')) else 0
 
 
-def precisionFunc(row):
-    actualTags = row.Tags.split(",")
-    predictedTags = row.New_Tags.split(",")
-    
-    # Tags predicted that are correct.
-    recalledTags = set(actualTags).intersection(predictedTags)
-    # Number of correctly predicted Tags
-    numberOfRecalledTags = len(recalledTags)
-    numberOfPredictedTags = len(predictedTags)
-    
-    return numberOfRecalledTags/numberOfPredictedTags if numberOfRecalledTags else 0
+    def recallFunc(self, row):
+        actualTags = row.Tags.split(",")
+        predictedTags = row.New_Tags.split(",")
+
+        # Tags predicted that are correct.
+        recalledTags = set(actualTags).intersection(predictedTags)
+        # Number of correctly predicted Tags
+        numberOfRecalledTags = len(recalledTags)
+
+        return numberOfRecalledTags/len(actualTags) if numberOfRecalledTags else 0
+
+
+    def precisionFunc(self, row):
+        actualTags = row.Tags.split(",")
+        predictedTags = row.New_Tags.split(",")
+
+        # Tags predicted that are correct.
+        recalledTags = set(actualTags).intersection(predictedTags)
+        # Number of correctly predicted Tags
+        numberOfRecalledTags = len(recalledTags)
+        numberOfPredictedTags = len(predictedTags)
+
+        return numberOfRecalledTags/numberOfPredictedTags if numberOfRecalledTags else 0
+
+if __name__ == "__main__":
+    metrics = Metrics()
